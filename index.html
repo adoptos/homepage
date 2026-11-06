@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Em breve</title>
+  <meta name="description" content="Em breve." />
+  <meta name="theme-color" content="#f7f8fb" />
+  <style>
+    :root {
+      --bg: #f7f8fb;
+      --fg: #0f1222;
+      --muted: #5a6278;
+      --accent: #3b63f0;
+      --conv: #12b76a;
+      --lift: min(160px, 18vh); /* deslocamento do título para cima */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      height: 100dvh;
+    }
+
+    canvas#bg {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+
+    /* Clareia o centro para o texto e escurece as bordas */
+    .vignette {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 34% 22% at 50% calc(50% - var(--lift)), rgba(247, 248, 251, 0.95) 0%, rgba(247, 248, 251, 0.6) 55%, rgba(247, 248, 251, 0) 100%),
+        radial-gradient(ellipse 120% 100% at 50% 50%, rgba(247, 248, 251, 0) 60%, rgba(247, 248, 251, 0.85) 100%);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px 24px calc(24px + 2 * var(--lift));
+    }
+
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 5.5rem);
+      font-weight: 700;
+      line-height: 0.95;
+      letter-spacing: -0.045em;
+      /* Folga para o background-clip não cortar o último glifo */
+      padding: 0 0.08em 0.06em;
+      background: linear-gradient(180deg, #0f1222 0%, #464e66 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: rise 1.2s cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+      to   { opacity: 1; transform: none; filter: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      h1 { animation: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="bg" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <main>
+    <h1>Em breve</h1>
+  </main>
+
+  <script>
+    // "Em breve" em ASCII no console do DevTools
+    (() => {
+      const font = {
+        E: ['█████', '█    ', '████ ', '█    ', '█████'],
+        M: ['█   █', '██ ██', '█ █ █', '█   █', '█   █'],
+        B: ['████ ', '█   █', '████ ', '█   █', '████ '],
+        R: ['████ ', '█   █', '████ ', '█  █ ', '█   █'],
+        V: ['█   █', '█   █', '█   █', ' █ █ ', '  █  '],
+        ' ': ['   ', '   ', '   ', '   ', '   '],
+      };
+      const text = 'EM BREVE';
+      const art = font.E.map((_, row) =>
+        [...text].map(ch => font[ch][row]).join('  ').trimEnd()
+      ).join('\n');
+
+      console.log(
+        `%c\n${art}\n`,
+        'font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; line-height: 1.15; ' +
+        'color: #3b63f0; text-shadow: 2px 2px 0 rgba(18, 183, 106, 0.45);'
+      );
+    })();
+  </script>
+
+  <script>
+    (() => {
+      // Conceito: cada ponto da grade é uma "impressão" de anúncio.
+      // Cursores navegam até alguns pontos e "clicam"; cada clique vira uma
+      // conversão que voa até o gráfico de performance no rodapé, que cresce.
+
+      const canvas = document.getElementById('bg');
+      const ctx = canvas.getContext('2d');
+      const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      const C = {
+        dot: [90, 98, 120],
+        accent: [59, 99, 240],
+        conv: [18, 183, 106],
+        ink: [15, 18, 34],
+      };
+      const rgba = (c, a) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
+      const rand = (a, b) => (b === undefined ? Math.random() * a : a + Math.random() * (b - a));
+      const lerp = (a, b, t) => a + (b - a) * t;
+      const ease = t => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+      const bez = (a, c, b, t) => (1 - t) * (1 - t) * a + 2 * (1 - t) * t * c + t * t * b;
+
+      let W = 0, H = 0, GAP = 30;
+      let dots = [];
+      let chartTop = 0, chartH = 0;
+
+      const BAR_W = 16;
+      const BAR_SPEED = BAR_W / 1.4; // px/s
+      let bars = [];
+      let barOffset = 0;
+      let maxV = 4;
+
+      const ripples = [];
+      const particles = [];
+      let cursors = [];
+
+      const CURSOR = new Path2D('M0 0 L0 17 L4.6 12.8 L7.6 19.6 L10.4 18.4 L7.4 11.8 L13 11.8 Z');
+
+      function resize() {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth;
+        H = window.innerHeight;
+        canvas.width = Math.round(W * dpr);
+        canvas.height = Math.round(H * dpr);
+        canvas.style.width = W + 'px';
+        canvas.style.height = H + 'px';
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        GAP = W < 640 ? 24 : 30;
+        chartH = H * 0.2;
+        chartTop = H - chartH;
+
+        dots = [];
+        const cols = Math.ceil(W / GAP) + 1;
+        const rows = Math.ceil(H / GAP) + 1;
+        const ox = (W - (cols - 1) * GAP) / 2;
+        const oy = (H - (rows - 1) * GAP) / 2;
+        for (let r = 0; r < rows; r++) {
+          for (let c = 0; c < cols; c++) {
+            dots.push({ x: ox + c * GAP, y: oy + r * GAP, glow: 0, conv: 0, hover: 0 });
+          }
+        }
+
+        const n = Math.ceil(W / BAR_W) + 3;
+        while (bars.length < n) bars.unshift(seedBar(bars.length));
+        while (bars.length > n) bars.shift();
+
+        const count = W < 640 ? 2 : 3;
+        while (cursors.length < count) cursors.push(new Cursor());
+        cursors.length = count;
+      }
+
+      // Tendência levemente crescente para o histórico inicial
+      // Passeio aleatório com reversão à média: base orgânica e suave
+      function nextBase(prev) {
+        return Math.max(0.4, prev + (1.4 - prev) * 0.15 + rand(-0.25, 0.25));
+      }
+      function seedBar() {
+        return nextBase(bars.length ? bars[0] : 1.4);
+      }
+
+      const title = document.querySelector('h1');
+      function inTextZone(x, y) {
+        const b = title.getBoundingClientRect();
+        return x > b.left - 60 && x < b.right + 60 && y > b.top - 60 && y < b.bottom + 60;
+      }
+
+      function pickDot() {
+        for (let i = 0; i < 40; i++) {
+          const d = dots[(Math.random() * dots.length) | 0];
+          if (d.x > 40 && d.x < W - 40 && d.y > 40 && d.y < chartTop - 30 && !inTextZone(d.x, d.y) && d.conv < 0.1) {
+            return d;
+          }
+        }
+        return dots[(Math.random() * dots.length) | 0];
+      }
+
+      class Cursor {
+        constructor() {
+          this.x = rand(W);
+          this.y = rand(chartTop);
+          this.press = 0;
+          this.alpha = 0;
+          this.next();
+        }
+        next() {
+          this.dot = pickDot();
+          this.sx = this.x; this.sy = this.y;
+          this.tx = this.dot.x; this.ty = this.dot.y;
+          this.cx = (this.sx + this.tx) / 2 + rand(-140, 140);
+          this.cy = (this.sy + this.ty) / 2 + rand(-140, 140);
+          this.t = 0;
+          this.dur = rand(1.1, 2.0);
+          this.state = 'move';
+        }
+        update(dt) {
+          this.alpha = Math.min(1, this.alpha + dt * 1.5);
+          this.press = Math.max(0, this.press - dt * 4);
+          if (this.state === 'move') {
+            this.t = Math.min(1, this.t + dt / this.dur);
+            const e = ease(this.t);
+            this.x = bez(this.sx, this.cx, this.tx, e);
+            this.y = bez(this.sy, this.cy, this.ty, e);
+            if (this.t >= 1) {
+              this.click();
+              this.state = 'wait';
+              this.wait = rand(0.35, 0.9);
+            }
+          } else {
+            this.wait -= dt;
+            if (this.wait <= 0) this.next();
+          }
+        }
+        click() {
+          this.press = 1;
+          this.dot.conv = 1;
+          this.dot.glow = 1;
+          ripples.push({ x: this.x, y: this.y, t: 0 });
+          particles.push(new Particle(this.x, this.y));
+        }
+        drawReticle() {
+          if (this.state !== 'move' || this.t < 0.45) return;
+          const k = (this.t - 0.45) / 0.55;
+          const s = lerp(22, 9, ease(k));
+          const a = 0.55 * k;
+          const l = 5;
+          ctx.save();
+          ctx.translate(this.tx, this.ty);
+          ctx.strokeStyle = rgba(C.accent, a);
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          for (const [sx, sy] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+            ctx.moveTo(sx * s, sy * (s - l));
+            ctx.lineTo(sx * s, sy * s);
+            ctx.lineTo(sx * (s - l), sy * s);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+        draw() {
+          const sc = 1 - this.press * 0.18;
+          ctx.save();
+          ctx.globalAlpha = this.alpha * 0.92;
+          ctx.translate(this.x, this.y);
+          ctx.scale(sc, sc);
+          ctx.shadowColor = 'rgba(15,18,34,0.25)';
+          ctx.shadowBlur = 6;
+          ctx.shadowOffsetY = 2;
+          ctx.fillStyle = rgba(C.ink, 1);
+          ctx.fill(CURSOR);
+          ctx.shadowColor = 'transparent';
+          ctx.lineWidth = 1.2;
+          ctx.lineJoin = 'round';
+          ctx.strokeStyle = '#ffffff';
+          ctx.stroke(CURSOR);
+          ctx.restore();
+        }
+      }
+
+      class Particle {
+        constructor(x, y) {
+          this.sx = x; this.sy = y;
+          this.t = 0;
+          this.dur = rand(1.1, 1.6);
+          this.trail = [];
+          this.done = false;
+        }
+        target() {
+          // Mira na barra "atual", perto da borda direita
+          const k = Math.min(bars.length - 1, Math.floor((W - 56 + barOffset) / BAR_W));
+          const x = k * BAR_W - barOffset + BAR_W / 2;
+          const y = H - (bars[k] / maxV) * chartH;
+          return { k, x, y };
+        }
+        update(dt) {
+          this.t = Math.min(1, this.t + dt / this.dur);
+          const tg = this.target();
+          const cx = lerp(this.sx, tg.x, 0.25);
+          const cy = Math.min(this.sy, tg.y) - 160;
+          const e = ease(this.t);
+          this.x = bez(this.sx, cx, tg.x, e);
+          this.y = bez(this.sy, cy, tg.y, e);
+          this.trail.push({ x: this.x, y: this.y });
+          if (this.trail.length > 18) this.trail.shift();
+          if (this.t >= 1 && !this.done) {
+            this.done = true;
+            bars[tg.k] += 0.7;
+            ripples.push({ x: tg.x, y: tg.y, t: 0, conv: true });
+          }
+        }
+        draw() {
+          const n = this.trail.length;
+          for (let i = 1; i < n; i++) {
+            const a = (i / n) * 0.55;
+            ctx.strokeStyle = rgba(C.conv, a);
+            ctx.lineWidth = (i / n) * 2.2;
+            ctx.beginPath();
+            ctx.moveTo(this.trail[i - 1].x, this.trail[i - 1].y);
+            ctx.lineTo(this.trail[i].x, this.trail[i].y);
+            ctx.stroke();
+          }
+          ctx.fillStyle = rgba(C.conv, 0.95);
+          ctx.shadowColor = rgba(C.conv, 0.6);
+          ctx.shadowBlur = 10;
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, 2.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      function update(dt) {
+        // Impressões aleatórias acendendo na grade
+        let spawn = dots.length * 0.06 * dt;
+        while (spawn > 0) {
+          if (Math.random() < spawn) dots[(Math.random() * dots.length) | 0].glow = rand(0.5, 1);
+          spawn -= 1;
+        }
+
+        for (const d of dots) {
+          if (d.glow > 0) d.glow = Math.max(0, d.glow - dt * 0.9);
+          if (d.conv > 0) d.conv = Math.max(0, d.conv - dt * 0.22);
+          let h = 0;
+          for (const c of cursors) {
+            const dx = d.x - c.x, dy = d.y - c.y;
+            const dist2 = dx * dx + dy * dy;
+            if (dist2 < 8100) h = Math.max(h, 1 - Math.sqrt(dist2) / 90);
+          }
+          d.hover = h;
+        }
+
+        for (const c of cursors) c.update(dt);
+
+        for (let i = particles.length - 1; i >= 0; i--) {
+          particles[i].update(dt);
+          if (particles[i].done) particles.splice(i, 1);
+        }
+
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          ripples[i].t += dt / 0.9;
+          if (ripples[i].t >= 1) ripples.splice(i, 1);
+        }
+
+        // Gráfico rolando para a esquerda
+        barOffset += BAR_SPEED * dt;
+        while (barOffset >= BAR_W) {
+          barOffset -= BAR_W;
+          bars.shift();
+          bars.push(nextBase(bars[bars.length - 1] * 0.7 + 1.4 * 0.3));
+        }
+        let m = 0;
+        for (const b of bars) if (b > m) m = b;
+        maxV = lerp(maxV, Math.max(4, m * 1.25), Math.min(1, dt * 1.5));
+      }
+
+      function drawDots() {
+        // Pontos "em repouso" em lote, para performance
+        ctx.fillStyle = rgba(C.dot, 0.22);
+        ctx.beginPath();
+        for (const d of dots) {
+          if (d.glow === 0 && d.conv === 0 && d.hover === 0) {
+            ctx.moveTo(d.x + 1, d.y);
+            ctx.arc(d.x, d.y, 1, 0, Math.PI * 2);
+          }
+        }
+        ctx.fill();
+
+        for (const d of dots) {
+          if (d.glow === 0 && d.conv === 0 && d.hover === 0) continue;
+          if (d.conv > 0) {
+            ctx.fillStyle = rgba(C.conv, 0.25 + d.conv * 0.7);
+            ctx.beginPath();
+            ctx.arc(d.x, d.y, 1.4 + d.conv * 1.6, 0, Math.PI * 2);
+            ctx.fill();
+            continue;
+          }
+          const g = Math.max(d.glow, d.hover * 0.8);
+          ctx.fillStyle = rgba(d.hover > d.glow ? C.accent : C.ink, 0.2 + g * 0.55);
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, 1 + g * 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      function drawChart() {
+        const pts = [];
+        for (let i = 0; i < bars.length; i++) {
+          const x = i * BAR_W - barOffset;
+          const h = (bars[i] / maxV) * chartH;
+          pts.push({ x: x + BAR_W / 2, y: H - h });
+
+          const grad = ctx.createLinearGradient(0, H - h, 0, H);
+          grad.addColorStop(0, rgba(C.accent, 0.18));
+          grad.addColorStop(1, rgba(C.accent, 0.03));
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          const bw = BAR_W - 5;
+          const r = Math.min(3, h / 2);
+          if (ctx.roundRect) ctx.roundRect(x + 2.5, H - h, bw, h + r, [r, r, 0, 0]);
+          else ctx.rect(x + 2.5, H - h, bw, h);
+          ctx.fill();
+        }
+
+        // Linha de tendência suavizada sobre as barras
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length - 1; i++) {
+          const mx = (pts[i].x + pts[i + 1].x) / 2;
+          const my = (pts[i].y + pts[i + 1].y) / 2;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+        }
+        const lineGrad = ctx.createLinearGradient(0, 0, W, 0);
+        lineGrad.addColorStop(0, rgba(C.accent, 0.1));
+        lineGrad.addColorStop(0.6, rgba(C.accent, 0.55));
+        lineGrad.addColorStop(1, rgba(C.conv, 0.8));
+        ctx.strokeStyle = lineGrad;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
+      }
+
+      function drawRipples() {
+        for (const r of ripples) {
+          const col = r.conv ? C.conv : C.accent;
+          for (let k = 0; k < 2; k++) {
+            const t = r.t - k * 0.18;
+            if (t <= 0) continue;
+            const e = 1 - Math.pow(1 - t, 3);
+            ctx.strokeStyle = rgba(col, (1 - t) * 0.6);
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(r.x, r.y, 4 + e * (r.conv ? 22 : 34), 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        }
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, W, H);
+        drawDots();
+        drawChart();
+        for (const c of cursors) c.drawReticle();
+        drawRipples();
+        for (const p of particles) p.draw();
+        for (const c of cursors) c.draw();
+      }
+
+      let last = performance.now();
+      function frame(now) {
+        const dt = Math.min(0.05, (now - last) / 1000);
+        last = now;
+        update(dt);
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener('resize', () => {
+        resize();
+        if (reduceMotion) draw();
+      });
+
+      resize();
+      if (reduceMotion) {
+        // Quadro estático, sem animação
+        for (const c of cursors) c.alpha = 1;
+        draw();
+      } else {
+        requestAnimationFrame(frame);
+      }
+    })();
+  </script>
+</body>
+</html>
