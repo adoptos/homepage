@@ -80,8 +80,63 @@
       to   { opacity: 1; transform: none; filter: none; }
     }
 
+    .secret-surprise {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      pointer-events: none;
+      background: rgba(247, 248, 251, 0.94);
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .secret-surprise.is-active {
+      opacity: 1;
+      visibility: visible;
+      animation: secret-fade 4s ease both;
+    }
+
+    .secret-message {
+      max-width: 900px;
+      text-align: center;
+      font-size: clamp(2rem, 7vw, 5.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.045em;
+      color: #8b32c9;
+      text-shadow: 0 6px 30px rgba(139, 50, 201, 0.2);
+    }
+
+    .secret-message::before {
+      content: '\2728 \2665 \2728';
+      display: block;
+      margin-bottom: 24px;
+      color: #ed4899;
+      font-size: 0.65em;
+      letter-spacing: 0.2em;
+    }
+
+    .is-active .secret-message {
+      animation: secret-pop 900ms cubic-bezier(.2, .8, .2, 1) both;
+    }
+
+    @keyframes secret-fade {
+      0%, 100% { opacity: 0; }
+      12%, 85% { opacity: 1; }
+    }
+
+    @keyframes secret-pop {
+      0% { opacity: 0; transform: translateY(40px) scale(0.6) rotate(-6deg); }
+      65% { opacity: 1; transform: translateY(-8px) scale(1.06) rotate(2deg); }
+      100% { opacity: 1; transform: none; }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       h1 { animation: none; }
+      .secret-surprise.is-active, .is-active .secret-message { animation: none; }
     }
   </style>
 </head>
@@ -92,6 +147,58 @@
   <main>
     <h1>Em breve</h1>
   </main>
+
+  <div class="secret-surprise" id="secret-surprise" role="status" aria-live="polite" aria-atomic="true">
+    <p class="secret-message"></p>
+  </div>
+
+  <script>
+    (() => {
+      const sequence = 'secret';
+      const surprise = document.getElementById('secret-surprise');
+      const message = surprise.querySelector('.secret-message');
+      let typed = '';
+      let hideTimer;
+
+      function hideSecret() {
+        clearTimeout(hideTimer);
+        surprise.classList.remove('is-active');
+        message.textContent = '';
+      }
+
+      function showSecret() {
+        hideSecret();
+        // Restart the animation even when the sequence is entered again immediately.
+        void surprise.offsetWidth;
+        message.textContent = 'Mateus Vilain gostoso!';
+        surprise.classList.add('is-active');
+        hideTimer = setTimeout(hideSecret, 4000);
+      }
+
+      window.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          typed = '';
+          hideSecret();
+          return;
+        }
+        if (event.repeat) return;
+        if (event.ctrlKey || event.metaKey || event.altKey || event.isComposing ||
+            event.target?.closest?.('input, textarea, select, [contenteditable]:not([contenteditable="false"])')) {
+          typed = '';
+          return;
+        }
+        if (event.key === 'Shift') return;
+
+        typed = (typed + event.key.toLowerCase()).slice(-sequence.length);
+        if (typed === sequence) {
+          typed = '';
+          showSecret();
+        }
+      });
+
+      window.addEventListener('blur', () => { typed = ''; });
+    })();
+  </script>
 
   <script>
     // "Em breve" em ASCII no console do DevTools
