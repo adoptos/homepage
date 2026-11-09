@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Adoptos — Logos (interno)</title>
+<link rel="icon" href="logos/concept-1/favicon/full-color.svg">
+<style>
+  :root{--ivory:#F4EFE6;--ink:#17150F;--signal:#DB391C;--stone:#DDD6C9;--gray:#8C857A;--bg:#2a2824}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ivory);font:15px/1.45 -apple-system,system-ui,sans-serif}
+  header{position:sticky;top:0;z-index:2;background:rgba(42,40,36,.92);backdrop-filter:blur(8px);border-bottom:1px solid #3a3731}
+  .bar{max-width:1280px;margin:0 auto;padding:16px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px}
+  h1{font-size:17px;font-weight:600;margin:0;margin-right:auto}
+  h1 small{color:var(--gray);font-weight:400;margin-left:8px}
+  nav{display:flex;flex-wrap:wrap;gap:6px}
+  nav a,.toggle button{font:12px ui-monospace,monospace;color:#cfc8bb;text-decoration:none;border:1px solid #4a463f;border-radius:999px;padding:5px 11px;background:none;cursor:pointer}
+  nav a:hover,.toggle button:hover{border-color:var(--signal);color:var(--ivory)}
+  .toggle{display:flex;gap:6px}
+  .toggle button[aria-pressed="true"]{background:var(--ivory);color:var(--ink);border-color:var(--ivory)}
+  main{max-width:1280px;margin:0 auto;padding:12px 32px 80px}
+  section.concept{scroll-margin-top:80px;padding-top:36px}
+  .head{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 16px;margin-bottom:16px}
+  h2{font-size:20px;font-weight:600;margin:0}
+  .head p{margin:0;color:#b8b1a5}
+  .head a{margin-left:auto;font:12px ui-monospace,monospace;color:var(--signal);text-decoration:none}
+  .head a:hover{text-decoration:underline}
+  .hero{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+  .hero .tile{min-height:220px}
+  .hero .tile img{max-height:80px;max-width:80%}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .tile{position:relative;border-radius:12px;min-height:170px;display:flex;align-items:center;justify-content:center;padding:36px 24px 24px;overflow:hidden}
+  .tile.light{background:var(--ivory)}
+  .tile.dark{background:var(--ink);outline:1px solid #3a3731}
+  .tile img{max-width:85%;max-height:64px;display:block}
+  .tile.sym img,.tile.fav img{max-height:72px}
+  .tile.app img{max-height:96px;border-radius:22%}
+  .tile.vert img{max-height:110px}
+  .tile .lbl{position:absolute;top:12px;left:14px;font:10px/1 ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase}
+  .tile.light .lbl{color:var(--gray)} .tile.dark .lbl{color:#6f695f}
+  .tile a.dl{position:absolute;top:8px;right:10px;font:11px ui-monospace,monospace;text-decoration:none;opacity:0;transition:opacity .15s;padding:2px 6px;border-radius:4px}
+  .tile.light a.dl{color:var(--ink);background:var(--stone)} .tile.dark a.dl{color:var(--ivory);background:#2f2c26}
+  .tile:hover a.dl{opacity:1}
+  .row-title{font:11px ui-monospace,monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--gray);margin:22px 0 10px}
+  body.compact .full{display:none}
+  footer{max-width:1280px;margin:0 auto;padding:0 32px 48px;color:var(--gray);font-size:13px}
+  footer a{color:#cfc8bb}
+  @media (max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}}
+  @media (max-width:520px){.bar,main,footer{padding-left:16px;padding-right:16px}}
+</style>
+</head>
+<body class="compact">
+<header>
+  <div class="bar">
+    <h1>Adoptos · Logos <small>uso interno</small></h1>
+    <nav id="nav"></nav>
+    <div class="toggle" role="group" aria-label="Nível de detalhe">
+      <button type="button" data-mode="compact" aria-pressed="true">Resumo</button>
+      <button type="button" data-mode="full" aria-pressed="false">Todas as variações</button>
+    </div>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<footer>
+  Paleta, tipografia e comparativo: <a href="logos/index.html">identidade visual</a> · <a href="logos/signal-opcoes.html">opções de Signal</a>
+</footer>
+
+<script>
+  const concepts = [
+    ["concept-1",  "Conceito 1",  "Ponto e raio"],
+    ["concept-1a", "Conceito 1A", "Segmento destacado"],
+    ["concept-2",  "Conceito 2",  "A em espaço negativo"],
+    ["concept-2a", "Conceito 2A", "Pernas cruzadas"],
+    ["concept-2b", "Conceito 2B", "Travessa alongada"],
+    ["concept-3",  "Conceito 3",  "Dois lados que se encaixam"],
+  ];
+  const variants = [
+    ["full-color", "Cor", "light"],
+    ["full-color-reversed", "Cor · invertido", "dark"],
+    ["mono-dark", "Mono escuro", "light"],
+    ["mono-light", "Mono claro", "dark"],
+  ];
+  const types = [
+    ["horizontal", "Horizontal", "hor"],
+    ["vertical", "Vertical", "vert"],
+    ["symbol", "Símbolo", "sym"],
+    ["wordmark", "Wordmark", "word"],
+    ["favicon", "Favicon", "fav"],
+  ];
+
+  const tile = (src, label, bg, cls) =>
+    `<div class="tile ${bg} ${cls}"><span class="lbl">${label}</span>` +
+    `<a class="dl" href="${src}" download title="Baixar SVG">SVG ↓</a>` +
+    `<img src="${src}" alt="${label}" loading="lazy"></div>`;
+
+  const nav = document.getElementById("nav");
+  const main = document.getElementById("main");
+
+  main.innerHTML = concepts.map(([id, name, desc]) => {
+    const base = `logos/${id}`;
+    nav.insertAdjacentHTML("beforeend", `<a href="#${id}">${name.replace("Conceito ", "C")}</a>`);
+
+    const hero = `<div class="hero">
+      ${tile(`${base}/horizontal/full-color.svg`, "Horizontal · cor", "light", "hor")}
+      ${tile(`${base}/horizontal/full-color-reversed.svg`, "Horizontal · invertido", "dark", "hor")}
+    </div>
+    <div class="grid">
+      ${tile(`${base}/symbol/full-color.svg`, "Símbolo", "light", "sym")}
+      ${tile(`${base}/symbol/full-color-reversed.svg`, "Símbolo · invertido", "dark", "sym")}
+      ${tile(`${base}/app-icon/ivory.svg`, "App icon · ivory", "light", "app")}
+      ${tile(`${base}/app-icon/ink.svg`, "App icon · ink", "dark", "app")}
+    </div>`;
+
+    const full = `<div class="full">` + types.map(([t, tName, cls]) =>
+      `<div class="row-title">${tName}</div><div class="grid">` +
+      variants.map(([v, vName, bg]) => tile(`${base}/${t}/${v}.svg`, vName, bg, cls)).join("") +
+      `</div>`).join("") + `</div>`;
+
+    return `<section class="concept" id="${id}">
+      <div class="head"><h2>${name}</h2><p>${desc}</p>
+        <a href="${base}/preview.html">ver aplicações →</a></div>
+      ${hero}${full}
+    </section>`;
+  }).join("");
+
+  document.querySelectorAll(".toggle button").forEach(btn => btn.addEventListener("click", () => {
+    const full = btn.dataset.mode === "full";
+    document.body.classList.toggle("compact", !full);
+    document.querySelectorAll(".toggle button").forEach(b => b.setAttribute("aria-pressed", b === btn));
+  }));
+</script>
+</body>
+</html>
