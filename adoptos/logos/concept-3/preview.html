@@ -21,6 +21,84 @@
   .notes{font-size:13px;color:#4a463e;margin-top:36px} .notes li{margin:6px 0}
   .notes.wide{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 48px;font-size:14px;margin:30px 0 0;padding-left:18px}
   section.c4:has(.wide){min-height:0}
+
+  /* ── Animação ─────────────────────────────────────────── */
+  .defs{position:absolute;width:0;height:0;overflow:hidden}
+  .motion-intro{display:grid;grid-template-columns:repeat(2,1fr);gap:2px 48px;font-size:14px;margin:30px 0 0;padding-left:18px}
+  .motion-intro li{margin:6px 0}
+  .anim{display:flex;flex-direction:column;gap:18px;min-height:0}
+  .stage{border-radius:10px;height:260px;display:flex;align-items:center;justify-content:center;margin-top:24px;position:relative}
+  .stage.ivory{background:#EBE5DA} .stage.ink{background:#17150F}
+  .stage svg{height:150px;overflow:visible}
+  .stage svg.lockup{height:auto;width:78%}
+  .stage .hint{position:absolute;bottom:12px;font:11px ui-monospace,monospace;color:#8C857A}
+  .anim h3{margin:0;font-size:16px}
+  .anim p{margin:0;font-size:13.5px;color:#3a362f}
+  .meta{display:flex;flex-wrap:wrap;gap:6px}
+  .meta span{font:11px ui-monospace,monospace;background:#DDD6C9;border-radius:4px;padding:2px 7px;color:#3a362f}
+  .replay{position:absolute;top:10px;right:10px;font:11px ui-monospace,monospace;border:0;border-radius:999px;padding:5px 10px;cursor:pointer;background:rgba(23,21,15,.08);color:#605B52}
+  .stage.ink .replay{background:rgba(244,239,230,.1);color:#B8B1A5}
+  .replay:hover{color:#DB391C}
+
+  .anim .ca,.anim .cb,.anim .dot,.anim .wave,.anim .wm{transform-box:fill-box;transform-origin:center}
+  .anim svg .rot{transform-box:view-box;transform-origin:24px 24px}
+  .ease-out{animation-timing-function:cubic-bezier(.2,.8,.2,1)}
+
+  /* 1 · Encaixe */
+  .enc .full{opacity:0;animation:enc-full 4.8s infinite}
+  .enc .ca{animation:enc-a 4.8s cubic-bezier(.2,.8,.2,1) infinite}
+  .enc .cb{animation:enc-b 4.8s cubic-bezier(.2,.8,.2,1) infinite}
+  .enc .lock{animation:enc-lock 4.8s infinite}
+  .enc .dot{animation:dot-pop-enc 4.8s infinite}
+  @keyframes enc-full{0%{opacity:0}8%{opacity:1}44.9%{opacity:1}45%,100%{opacity:0}}
+  @keyframes enc-a{0%{transform:translateX(-14px)}40%,100%{transform:translateX(0)}}
+  @keyframes enc-b{0%{transform:translateX(14px)}40%,100%{transform:translateX(0)}}
+  @keyframes enc-lock{0%,44.9%{opacity:0;transform:scale(1)}45%{opacity:1;transform:scale(1.045)}52%{transform:scale(1)}90%{opacity:1}100%{opacity:0}}
+  @keyframes dot-pop-enc{0%,48%{transform:scale(0)}56%{transform:scale(1.2)}62%{transform:scale(1)}90%{opacity:1}100%{opacity:0;transform:scale(1)}}
+
+  /* 2 · Traçado */
+  .tra .ma{animation:tra-a 4.4s cubic-bezier(.65,0,.35,1) infinite}
+  .tra .mb{animation:tra-b 4.4s cubic-bezier(.65,0,.35,1) infinite}
+  .tra .dot{animation:dot-pop-tra 4.4s infinite}
+  .tra .all{animation:fade-end 4.4s infinite}
+  @keyframes tra-a{0%{stroke-dashoffset:88}35%,100%{stroke-dashoffset:0}}
+  @keyframes tra-b{0%,15%{stroke-dashoffset:88}50%,100%{stroke-dashoffset:0}}
+  @keyframes dot-pop-tra{0%,50%{transform:scale(0)}58%{transform:scale(1.2)}64%,100%{transform:scale(1)}}
+  @keyframes fade-end{0%,88%{opacity:1}100%{opacity:0}}
+
+  /* 3 · Meia-volta */
+  .mvo .rot{animation:mvo-rot 2.4s cubic-bezier(.65,0,.35,1) infinite}
+  .mvo .dot{animation:mvo-dot 2.4s cubic-bezier(.65,0,.35,1) infinite}
+  @keyframes mvo-rot{0%{transform:rotate(0)}60%,100%{transform:rotate(180deg)}}
+  @keyframes mvo-dot{0%{transform:scale(1)}30%{transform:scale(.72)}60%,100%{transform:scale(1)}}
+
+  /* 4 · Sinal */
+  .sin .wave{opacity:0;animation:sin-wave 2.4s cubic-bezier(.2,.8,.2,1) infinite}
+  .sin .wave.w2{animation-delay:.5s}
+  .sin .dot{animation:sin-dot 2.4s infinite}
+  @keyframes sin-wave{0%{transform:scale(1);opacity:.5}70%,100%{transform:scale(3.8);opacity:0}}
+  @keyframes sin-dot{0%{transform:scale(1)}10%{transform:scale(1.14)}28%,100%{transform:scale(1)}}
+
+  /* 5 · Assinatura (lockup) */
+  .ass .sym{animation:ass-sym 5s cubic-bezier(.2,.8,.2,1) infinite}
+  .ass .dot{animation:ass-dot 5s infinite}
+  .ass .wm{animation:ass-wm 5s cubic-bezier(.2,.8,.2,1) infinite}
+  .ass .all{animation:fade-end 5s infinite}
+  @keyframes ass-sym{0%{opacity:0;transform:scale(.86) rotate(-90deg)}22%,100%{opacity:1;transform:scale(1) rotate(0)}}
+  @keyframes ass-dot{0%,20%{transform:scale(0)}27%{transform:scale(1.2)}32%,100%{transform:scale(1)}}
+  @keyframes ass-wm{0%,30%{opacity:0;transform:translateX(-34px)}55%,100%{opacity:1;transform:translateX(0)}}
+
+  /* 6 · Hover */
+  .hov .stage{cursor:pointer}
+  .hov .rot{transition:transform .7s cubic-bezier(.65,0,.35,1)}
+  .hov .dot{transition:transform .35s cubic-bezier(.2,.8,.2,1)}
+  .hov .stage:hover .rot{transform:rotate(180deg)}
+  .hov .stage:hover .dot{transform:scale(1.18)}
+
+  @media (prefers-reduced-motion:reduce){
+    .anim svg *{animation:none!important;transition:none!important}
+    .enc .full,.sin .wave{opacity:0!important}
+  }
 </style>
 <main>
   <h1>Adoptos <small>· Conceito 3 — Dois lados que se encaixam · fase 1</small></h1>
@@ -43,4 +121,109 @@
     <div class="sizes"><div class="sz"><img src="symbol/full-color.svg" height="128" alt=""><span>128px</span></div><div class="sz"><img src="symbol/full-color.svg" height="64" alt=""><span>64px</span></div><div class="sz"><img src="symbol/full-color.svg" height="32" alt=""><span>32px</span></div><div class="sz"><img src="symbol/full-color.svg" height="24" alt=""><span>24px</span></div><div class="sz"><img src="favicon/full-color.svg" height="32" alt=""><span>32px · favicon</span></div><div class="sz"><img src="favicon/full-color.svg" height="16" alt=""><span>16px · favicon</span></div></div></section>
   <section class="c2 center"><span class="lbl">Ícone de app</span><span class="n">07</span>
     <img src="app-icon/ink.svg" height="150" alt=""><img src="app-icon/ivory.svg" height="150" alt=""></section>
-</main></html>
+
+  <svg class="defs" aria-hidden="true"><defs>
+    <path id="c3-ring-a" d="M20.959 40.383A16.5 16.5 0 1 1 32.859 32.954A9.75 9.75 0 0 1 25.859 33.23A11.5 11.5 0 1 0 13.959 34.336A18.25 18.25 0 0 0 20.959 40.383Z"/>
+    <path id="c3-ring-b" d="M27.041 7.617A16.5 16.5 0 1 1 15.141 15.046A9.75 9.75 0 0 1 22.141 14.77A11.5 11.5 0 1 0 34.041 13.664A18.25 18.25 0 0 0 27.041 7.617Z"/>
+  </defs></svg>
+
+  <h1 style="margin-top:40px">Animação <small>· ideias de movimento para o símbolo</small></h1>
+  <section class="c4"><span class="lbl">Princípios de movimento</span><span class="n">08</span>
+    <ul class="motion-intro">
+      <li><b>O encaixe é o clímax.</b> Toda animação constrói até o momento em que os dois lados se travam.</li>
+      <li><b>O ponto chega por último.</b> O público só aparece quando anunciante e espaço já se encontraram.</li>
+      <li><b>Simetria de 180°.</b> O símbolo é idêntico girado meia-volta: loops sem emenda, sem “pulo”.</li>
+      <li><b>Signal não se mexe à toa.</b> O vermelhão só pulsa ou cresce, nunca viaja: ele marca o lugar.</li>
+      <li>Curvas: <code>cubic-bezier(.2,.8,.2,1)</code> para entradas, <code>(.65,0,.35,1)</code> para giros.</li>
+      <li>Com <code>prefers-reduced-motion</code>, tudo aparece no estado final, estático.</li>
+    </ul></section>
+
+  <section class="c2 anim enc"><span class="lbl">Ideia 1 · Encaixe</span><span class="n">09</span>
+    <div class="stage ivory"><button class="replay" type="button">↻ repetir</button>
+      <svg viewBox="0 0 48 48" aria-label="Animação: encaixe">
+        <g class="full">
+          <circle class="ca" cx="19" cy="24" r="14" fill="none" stroke="#17150F" stroke-width="5"/>
+          <g class="cb"><circle cx="29" cy="24" r="14" fill="none" stroke="#EBE5DA" stroke-width="8.5"/><circle cx="29" cy="24" r="14" fill="none" stroke="#17150F" stroke-width="5"/></g>
+        </g>
+        <g class="lock rot"><use href="#c3-ring-a" fill="#17150F"/><use href="#c3-ring-b" fill="#17150F"/></g>
+        <circle class="dot" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+      </svg></div>
+    <h3>Os dois lados chegam e se travam</h3>
+    <p>Os anéis entram inteiros, de lados opostos, um por cima do outro. No contato, “clicam”: passam a se entrelaçar, com um leve tranco de escala. Só então o ponto surge no centro.</p>
+    <div class="meta"><span>abertura de vídeo</span><span>splash do app</span><span>3 s + pausa</span></div>
+  </section>
+
+  <section class="c2 anim tra"><span class="lbl">Ideia 2 · Traçado</span><span class="n">10</span>
+    <div class="stage ivory"><button class="replay" type="button">↻ repetir</button>
+      <svg viewBox="0 0 48 48" aria-label="Animação: traçado">
+        <mask id="c3-draw-a" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><circle class="ma" cx="19" cy="24" r="14" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="88 88" transform="rotate(83 19 24)"/></mask>
+        <mask id="c3-draw-b" maskUnits="userSpaceOnUse" x="0" y="0" width="48" height="48"><circle class="mb" cx="29" cy="24" r="14" fill="none" stroke="#fff" stroke-width="7" stroke-dasharray="88 88" transform="rotate(263 29 24)"/></mask>
+        <g class="all">
+          <use href="#c3-ring-a" fill="#17150F" mask="url(#c3-draw-a)"/>
+          <use href="#c3-ring-b" fill="#17150F" mask="url(#c3-draw-b)"/>
+          <circle class="dot" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+        </g>
+      </svg></div>
+    <h3>Desenhado como uma linha contínua</h3>
+    <p>Cada anel é traçado a partir do próprio corte, no mesmo sentido, com defasagem. O segundo termina passando por dentro do primeiro, e o ponto fecha a composição como um carimbo.</p>
+    <div class="meta"><span>apresentações</span><span>vinheta</span><span>2,8 s + pausa</span></div>
+  </section>
+
+  <section class="c2 anim mvo"><span class="lbl">Ideia 3 · Meia-volta</span><span class="n">11</span>
+    <div class="stage ink"><button class="replay" type="button">↻ repetir</button>
+      <svg viewBox="0 0 48 48" aria-label="Animação: meia-volta">
+        <g class="rot"><use href="#c3-ring-a" fill="#F4EFE6"/><use href="#c3-ring-b" fill="#F4EFE6"/></g>
+        <circle class="dot" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+      </svg></div>
+    <h3>Loader sem emenda</h3>
+    <p>O símbolo gira 180° e para: como é simétrico, a posição final é idêntica à inicial e o ciclo recomeça sem salto. O ponto encolhe durante o giro e volta no repouso, como se “respirasse”.</p>
+    <div class="meta"><span>carregamento</span><span>pull-to-refresh</span><span>2,4 s · loop</span></div>
+  </section>
+
+  <section class="c2 anim sin"><span class="lbl">Ideia 4 · Sinal</span><span class="n">12</span>
+    <div class="stage ivory"><button class="replay" type="button">↻ repetir</button>
+      <svg viewBox="0 0 48 48" aria-label="Animação: sinal">
+        <circle class="wave" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+        <circle class="wave w2" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+        <use href="#c3-ring-a" fill="#17150F"/><use href="#c3-ring-b" fill="#17150F"/>
+        <circle class="dot" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+      </svg></div>
+    <h3>O lugar está ativo</h3>
+    <p>Os anéis ficam parados e o ponto emite ondas que se espalham por trás deles, como o “você está aqui” de um mapa. Comunica presença ao vivo: uma tela exibindo, um público sendo alcançado.</p>
+    <div class="meta"><span>status “ao vivo”</span><span>notificação</span><span>2,4 s · loop</span></div>
+  </section>
+
+  <section class="c2 anim ass"><span class="lbl">Ideia 5 · Assinatura</span><span class="n">13</span>
+    <div class="stage ivory"><button class="replay" type="button">↻ repetir</button>
+      <svg class="lockup" viewBox="0 0 213.26 42.4" aria-label="Animação: assinatura">
+        <clipPath id="c3-wm-clip"><rect x="50" y="0" width="170" height="42.4"/></clipPath>
+        <g class="all">
+          <g transform="translate(-0.575 -4.716) scale(1.03)">
+            <g class="sym rot"><use href="#c3-ring-a" fill="#17150F"/><use href="#c3-ring-b" fill="#17150F"/></g>
+            <circle class="dot" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+          </g>
+          <g clip-path="url(#c3-wm-clip)"><image class="wm" href="wordmark/full-color.svg" x="56.64" y="0" width="156.62" height="42.4"/></g>
+        </g>
+      </svg></div>
+    <h3>Símbolo gira e entrega o nome</h3>
+    <p>Os anéis entram com um quarto de volta, o ponto se acende e o nome “adoptos” desliza de trás do símbolo. Versão para fechar vídeos e para a primeira carga do site.</p>
+    <div class="meta"><span>fim de vídeo</span><span>header do site</span><span>2,8 s + pausa</span></div>
+  </section>
+
+  <section class="c2 anim hov"><span class="lbl">Ideia 6 · Hover</span><span class="n">14</span>
+    <div class="stage ink"><span class="hint">passe o mouse</span>
+      <svg viewBox="0 0 48 48" aria-label="Animação: hover">
+        <g class="rot"><use href="#c3-ring-a" fill="#F4EFE6"/><use href="#c3-ring-b" fill="#F4EFE6"/></g>
+        <circle class="dot" cx="24" cy="24" r="4.75" fill="#DB391C"/>
+      </svg></div>
+    <h3>Microinteração no logo do site</h3>
+    <p>Ao passar o mouse, o símbolo dá meia-volta e o ponto cresce levemente. Discreto o bastante para o header, e reaproveita a simetria da Ideia 3, então nunca termina “torto”.</p>
+    <div class="meta"><span>header</span><span>botões</span><span>0,7 s · transição</span></div>
+  </section>
+</main>
+<script>
+  document.querySelectorAll(".anim .replay").forEach(btn => btn.addEventListener("click", () => {
+    btn.closest(".stage").querySelector("svg").getAnimations({subtree: true}).forEach(a => { a.currentTime = 0; a.play(); });
+  }));
+</script>
+</html>
